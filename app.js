@@ -44,16 +44,80 @@ app.post("/", function (req, res) {
     }
   );
 });
+app.get("/logout", function (req, res) {
+  req.session.destroy();
+  res.redirect("/");
+});
 
+app.get("/teacher", function (req, res) {
+  if (req.session.loggedin) {
+    let user_name = req.session.user_name;
+    con.query(
+      "select teacher_name from teachers where user_name=? ",
+      [user_name],
+      function (err, rows) {
+        if (err) {
+          req.flash("error", err);
+          res.render("teacher", { data: "" });
+        } else {
+          res.render("teacher", { data: rows });
+        }
+      }
+    );
+  } else {
+    res.send("Please Login");
+  }
+});
 app.get("/user", function (req, res, next) {
-  con.query("select * from users", function (err, rows) {
-    if (err) {
-      req.flash("error", err);
-      res.render("profile", { data: "" });
-    } else {
-      res.render("profile", { data: rows });
-    }
-  });
+  if (req.session.loggedin) {
+    let email = req.session.email;
+    con.query(
+      "SELECT  FROM users WHERE email= ?",
+      [email],
+      function (err, rows) {
+        if (err) {
+          req.flash("error", err);
+          res.render("profile", { data: "" });
+        } else {
+          res.render("profile", { data: rows });
+        }
+      }
+    );
+  } else {
+    res.send("please login first");
+  }
+});
+
+app.post("/auth2", function (request, response) {
+  // Capture the input fields
+  let user_name = request.body.user_name;
+  let password = request.body.password;
+  // Ensure the input fields exists and are not empty
+  if (user_name && password) {
+    // Execute SQL query that'll select the account from the database based on the specified username and password
+    con.query(
+      "SELECT * FROM teachers WHERE user_name = ? AND password = ?",
+      [user_name, password],
+      function (error, results, fields) {
+        // If there is an issue with the query, output the error
+        if (error) throw error;
+        // If the account exists
+        if (results.length > 0) {
+          // Authenticate the users
+          request.session.loggedin = true;
+          request.session.user_name = user_name;
+          // Redirect to home page
+          response.redirect("/teacher");
+        } else {
+          response.send("Incorrect email and/or Password!");
+        }
+        response.end();
+      }
+    );
+  } else {
+    response.send("Please enter email and Password!");
+    response.end();
+  }
 });
 
 app.post("/auth1", function (request, response) {
@@ -77,13 +141,13 @@ app.post("/auth1", function (request, response) {
           // Redirect to home page
           response.redirect("/admin");
         } else {
-          response.send("Incorrect email and/or Password!");
+          response.send("Incorrect user name and/or Password!");
         }
         response.end();
       }
     );
   } else {
-    response.send("Please enter email and Password!");
+    response.send("Please enter user name and Password!");
     response.end();
   }
 });
@@ -120,6 +184,50 @@ app.post("/auth", function (request, response) {
   }
 });
 
+app.get("/courses", function (req, res) {
+  let email = req.session.email;
+  con.query(
+    "select * from studentcourse s , users u where u.email= s.student_email",
+    function (err, rows) {
+      if (err) {
+        req.flash("error", err);
+        res.render("courses", { data: "" });
+      } else {
+        res.render("courses", { data: rows });
+      }
+    }
+  );
+});
+app.get("/teachercourses", function (req, res) {
+  if (req.session.loggedin) {
+    let user_name = req.session.user_name;
+    con.query(
+      "select courses.course_name from teachers JOIN courses ON teachers.id = courses.teacher_id ",
+
+      function (err, rows) {
+        if (err) {
+          req.flash("error", err);
+          res.render("teachercourses", { data: "" });
+        } else {
+          res.render("teachercourses", { data: rows });
+        }
+      }
+    );
+  } else {
+    res.send("Please Login");
+  }
+});
+
+app.get("/admin", function (req, res) {
+  con.query("select * from users", function (err, rows) {
+    if (err) {
+      req.flash("error", err);
+      res.render("admin", { data: "" });
+    } else {
+      res.render("admin", { data: rows });
+    }
+  });
+});
 app.get("/home", function (request, response) {
   // If the user is loggedin
   if (request.session.loggedin) {
@@ -130,16 +238,6 @@ app.get("/home", function (request, response) {
     response.send("Please login to view this page!");
   }
   response.end();
-});
-app.get("/admin", function (req, res) {
-  con.query("select * from users", function (err, rows) {
-    if (err) {
-      req.flash("error", err);
-      res.render("admin", { data: "" });
-    } else {
-      res.render("admin", { data: rows });
-    }
-  });
 });
 
 // popup.alert({

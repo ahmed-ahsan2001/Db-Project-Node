@@ -75,22 +75,24 @@
         height: 100%;
         overflow: auto;
       }
-
       .sidebar a {
         display: block;
         color: black;
         padding: 16px;
         text-decoration: none;
       }
-
       .sidebar a.active {
         background-color: #04aa6d;
         color: white;
       }
-
       .sidebar a:hover:not(.active) {
         background-color: #555;
         color: white;
+      }
+      div.content {
+        margin-left: 200px;
+        padding: 1px 16px;
+        height: 1000px;
       }
       @media screen and (max-width: 700px) {
         .sidebar {
@@ -105,7 +107,6 @@
           margin-left: 0;
         }
       }
-
       @media screen and (max-width: 400px) {
         .sidebar a {
           text-align: center;
@@ -126,8 +127,8 @@
       <li><a href="/logout">LogOut</a></li>
     </ul>
     <div class="sidebar">
-      <a class="active" href="#home">Profile</a>
-      <a href="/courses">Courses</a>
+      <a href="/home">Profile</a>
+      <a class="active" href="/teachercourses">Courses</a>
       <a href="#contact">Contact</a>
       <a href="/logout">Logout</a>
     </div>
@@ -136,17 +137,16 @@
       <table class="table">
         <thead>
           <tr>
-            <th>#Id</th>
+            <th></th>
             <th>Name</th>
-            <th>Email</th>
           </tr>
         </thead>
         <tbody>
-          <% if(data.length){ for(var i = 0; i< data.length; i++) {%>
+          <% if(courses.length){ for(var i = 0; i< courses.length; i++) {%>
           <tr>
             <th scope="row"><%= (i+1) %></th>
-            <td><%= data[i].name%></td>
-            <td><%= data[i].email%></td>
+
+            <td><%= courses[i].course_name%></td>
           </tr>
           <% } }else{ %>
           <tr>
